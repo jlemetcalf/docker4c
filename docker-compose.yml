@@ -19,6 +19,6 @@ services:
     user: root
     network_mode: "bridge"
     ports:
-      - "2222:22"
+      - "3322:22"
     privileged: true
     hostname: docker4c_dev_env
