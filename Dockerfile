@@ -2,10 +2,10 @@
 # CI image:
 #   the one used by your CI server
 #######################################
-FROM ubuntu:20.04 as docker4c_ci_image
+FROM ubuntu:24.04 as docker4c_ci_image
 
 ARG DEBIAN_FRONTEND=noninteractive
-ARG CLANG_VERSION=12
+ARG CLANG_VERSION=19
 
 # fix "Missing privilege separation directory":
 # https://bugs.launchpad.net/ubuntu/+source/openssh/+bug/45234
