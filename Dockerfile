@@ -2,10 +2,10 @@
 # CI image:
 #   the one used by your CI server
 #######################################
-FROM ubuntu:24.04 as docker4c_ci_image
+FROM ubuntu:24.04 AS docker4c_ci_image
 
 ARG DEBIAN_FRONTEND=noninteractive
-ARG CLANG_VERSION=19
+ARG CLANG_VERSION=18
 
 # fix "Missing privilege separation directory":
 # https://bugs.launchpad.net/ubuntu/+source/openssh/+bug/45234
@@ -43,7 +43,6 @@ RUN mkdir -p /run/sshd && \
   valgrind \
   wget && \
   \
-  pip install behave conan pexpect requests && \
   apt-get autoremove -y && apt-get clean && \
   \
   for c in $(ls /usr/bin/clang*-${CLANG_VERSION}); do link=$(echo $c | sed "s/-${CLANG_VERSION}//"); ln -sf $c $link; done && \
@@ -66,7 +65,7 @@ RUN rm -rf /var/tmp/build_iwyu
 # DEV image:
 #   the one you run locally
 #######################################
-FROM docker4c_ci_image as docker4c_dev_image
+FROM docker4c_ci_image AS docker4c_dev_image
 
 RUN apt-get -y install --fix-missing \
   cmake-curses-gui \
@@ -74,16 +73,22 @@ RUN apt-get -y install --fix-missing \
   gdbserver \
   python-is-python3 \
   vim \
+  python3.12-venv \
   && apt-get autoremove -y && apt-get clean && \
   \
-  groupadd -g 1000 dev && \
-  useradd -m -u 1000 -g 1000 -d /home/dev -s /bin/bash dev && \
+  groupadd -g 2000 dev && \
+  useradd -m -u 2000 -g 2000 -d /home/dev -s /bin/bash dev && \
   usermod -a -G adm,cdrom,sudo,dip,plugdev dev && \
   echo 'dev:dev' | chpasswd && \
   echo "dev   ALL=(ALL:ALL) ALL" >> /etc/sudoers
 
 USER dev
 WORKDIR /home/dev
+
+RUN python3 -m venv venv
+ENV PATH="/home/dev/venv/bin:$PATH"
+RUN pip install behave conan pexpect requests
+RUN echo "source /home/dev/venv/bin/activate" >> /home/dev/.bashrc
 
 RUN sed -i 's/\\h/docker/;s/01;32m/01;33m/' /home/dev/.bashrc \
   && mkdir -p /home/dev/git
